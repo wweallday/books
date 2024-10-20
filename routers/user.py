@@ -5,6 +5,7 @@ from dependencies import create_access_token, verify_token, get_db
 from pydantic import BaseModel
 from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -28,10 +29,9 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     new_user = user_repository.create_user(db, user.username, user.email, user.password)
     return {"username": new_user.username, "email": new_user.email}
 
-# User login and token generation
 @router.post("/login", response_model=Token)
-def login(user: UserLogin, db: Session = Depends(get_db)):
-    db_user = user_repository.authenticate_user(db, user.username, user.password)
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
+    db_user = await user_repository.authenticate_user(db, form_data.username, form_data.password)
     if not db_user:
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
