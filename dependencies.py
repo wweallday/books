@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
-from database import SessionLocal
 from jose import JWTError, jwt
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from config import settings
+from sqlalchemy.ext.asyncio import AsyncSession
+from collections.abc import AsyncGenerator
+import database
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/user/login")
 
 # Create JWT access token
 def create_access_token(data: dict, expires_delta: timedelta = None):
@@ -36,9 +38,6 @@ def verify_token(token: str = Depends(oauth2_scheme)):
     return username
 
 # Dependency to get DB session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with database.get_async_session() as session:
+        yield session
