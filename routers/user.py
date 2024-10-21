@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from repository import user as user_repository
-from dependencies import create_access_token, verify_token, get_db
+from dependencies import get_db, get_current_user
 from pydantic import BaseModel
 from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
+from models.model import User, UserResponse
 
 router = APIRouter()
 
@@ -35,25 +36,14 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     if not db_user:
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
-    # Create a JWT token for the authenticated user
+    # Create a JWT token for the authenticated user, use user.id in sub
     access_token_expires = timedelta(minutes=30)
     access_token = user_repository.create_access_token(
-        data={"sub": db_user.username}, expires_delta=access_token_expires
+        data={"sub": str(db_user.id)},  # Store the user id in the sub field
+        expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post("/token")
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = user_repository.authenticate_user(db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    
-    # Create access token
-    access_token_expires = timedelta(minutes=30)
-    access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
-    
-    return {"access_token": access_token, "token_type": "bearer"}
-
-@router.get("/me", dependencies=[Depends(verify_token)])
-def read_users_me(current_user: str = Depends(verify_token)):
-    return {"user": current_user}
+@router.get("/me", response_model=UserResponse)
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
