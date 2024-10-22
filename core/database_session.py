@@ -25,6 +25,6 @@ _ASYNC_ENGINE = new_async_engine(settings.DATABASE_URI())
 _ASYNC_SESSIONMAKER = async_sessionmaker(_ASYNC_ENGINE, expire_on_commit=False)
 
 
-def get_async_session() -> AsyncSession:  # pragma: no cover
+async def get_async_session() -> AsyncSession:
     return _ASYNC_SESSIONMAKER()
 

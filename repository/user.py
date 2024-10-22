@@ -44,7 +44,7 @@ async def get_user_by_email_or_username(db: AsyncSession, username: str, email: 
     return result.scalars().first()
 
 # Create a new user (async)
-async def create_user(db: AsyncSession, username: str, email: str, password: str):
+async def create_user(db: AsyncSession, username: str, email: str, password: str, name: str):
     # Check if a user with the same email or username exists
     existing_user = await get_user_by_email_or_username(db, username, email)
     if existing_user:
@@ -55,7 +55,7 @@ async def create_user(db: AsyncSession, username: str, email: str, password: str
     
     # If no existing user, proceed to create the new user
     hashed_password = hash_password(password)
-    user = User(username=username, email=email, password_hash=hashed_password)
+    user = User(username=username, email=email, password_hash=hashed_password,name = name)
     db.add(user)
     await db.commit()  # Await commit for async session
     await db.refresh(user)  # Await refresh

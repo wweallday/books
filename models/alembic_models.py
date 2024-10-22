@@ -1,3 +1,5 @@
+# models/alembic_models.py
+
 from models.model import (
     User,
     BookGenreLink,
@@ -9,3 +11,4 @@ from models.model import (
     BookTagLink,
     Book
 )
+# Import any additional models here as your project grows

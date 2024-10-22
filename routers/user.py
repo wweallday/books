@@ -11,10 +11,6 @@ from models.model import User, UserResponse
 router = APIRouter()
 
 # Pydantic models for request/response validation
-class UserCreate(BaseModel):
-    username: str
-    email: str
-    password: str
 
 class UserLogin(BaseModel):
     username: str
@@ -23,12 +19,22 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+    name: str
 
 # Register a new user
 @router.post("/register")
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    new_user = user_repository.create_user(db, user.username, user.email, user.password)
-    return {"username": new_user.username, "email": new_user.email}
+async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+    # Properly await the `create_user` function
+    new_user = await user_repository.create_user(db, user.username, user.email, user.password, user.name)
+    if new_user:
+        print(new_user)
+        return {"yes": "it worked"}
+    else:
+        return {"no": "it didn't work"}
 
 @router.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):

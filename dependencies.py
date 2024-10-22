@@ -6,9 +6,11 @@ from fastapi import Depends, HTTPException, status
 from config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
 from collections.abc import AsyncGenerator
-import database
 from models.model import User, TokenPayload
 from typing import Annotated
+from core.database_session import _ASYNC_SESSIONMAKER
+
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/user/login")
 TokenDep = Annotated[str, Depends(oauth2_scheme)]
@@ -26,8 +28,9 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 
 # Dependency to get DB session
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    async with database.get_async_session() as session:
+    async with _ASYNC_SESSIONMAKER() as session:
         yield session
+
 
 async def get_current_user(
     token: TokenDep, 
