@@ -54,3 +54,25 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.get("/users/{user_id}")
+async def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    user = await user_repository.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@router.put("/users/{user_id}")
+async def update_user(user_id: int, user_data: dict, db: AsyncSession = Depends(get_db)):
+    updated_user = await user_repository.update_user(db, user_id, user_data)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated_user
+
+@router.delete("/users/{user_id}")
+async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    deleted_user = await user_repository.delete_user(db, user_id)
+    if not deleted_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "User deleted"}  

@@ -75,3 +75,27 @@ async def get_user_by_username(db: AsyncSession, username: str):
     statement = select(User).where(User.username == username)
     result = await db.execute(statement)  # Await the async execution
     return result.scalars().first()
+
+async def get_user_by_id(db: AsyncSession, user_id: int):
+    statement = select(User).where(User.id == user_id)
+    result = await db.execute(statement)
+    return result.scalars().first()
+
+async def update_user(db: AsyncSession, user_id: int, user_data: dict):
+    user = await get_user_by_id(db, user_id)
+    if not user:
+        return None
+    for key, value in user_data.items():
+        setattr(user, key, value)
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+async def delete_user(db: AsyncSession, user_id: int):
+    user = await get_user_by_id(db, user_id)
+    if not user:
+        return None
+    await db.delete(user)
+    await db.commit()
+    return user
