@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from models.model import User
 from passlib.context import CryptContext
 from sqlmodel import select
@@ -54,12 +55,20 @@ async def create_user(db: AsyncSession, username: str, email: str, password: str
             raise HTTPException(status_code=400, detail="Email is already registered")
     
     # If no existing user, proceed to create the new user
-    hashed_password = hash_password(password)
-    user = User(username=username, email=email, password_hash=hashed_password,name = name)
-    db.add(user)
-    await db.commit()  # Await commit for async session
-    await db.refresh(user)  # Await refresh
-    return user
+    try:
+        hashed_password = hash_password(password)
+        user = User(username=username, email=email, password_hash=hashed_password, name=name)
+        db.add(user)
+        await db.commit()  # Await commit for async session
+        await db.refresh(user)  # Await refresh
+        return user
+    except IntegrityError:
+        await db.rollback()  # Rollback in case of failure
+        raise HTTPException(status_code=400, detail="Database constraint error")
+    except Exception:
+        await db.rollback()  # Rollback to avoid partial commits
+        # Optionally log the exception for debugging purposes, if needed.
+        raise HTTPException(status_code=500, detail="Can't create user due to a backend error")
 
 # Get user by username (async)
 async def get_user_by_username(db: AsyncSession, username: str):

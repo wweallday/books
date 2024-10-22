@@ -30,11 +30,12 @@ class UserCreate(BaseModel):
 async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     # Properly await the `create_user` function
     new_user = await user_repository.create_user(db, user.username, user.email, user.password, user.name)
-    if new_user:
-        print(new_user)
-        return {"yes": "it worked"}
-    else:
-        return {"no": "it didn't work"}
+    return {
+        "id:": new_user.id,
+        "name": new_user.name,
+        "user_name": new_user.username,
+        "email": new_user.email
+    }
 
 @router.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
