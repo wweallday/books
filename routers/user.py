@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from repository import user as user_repository
 from dependencies import get_db, get_current_user
 from pydantic import BaseModel
 from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from models.model import User, UserResponse
+from models.user import User
+from models.schema import UserResponse
 
 router = APIRouter()
 

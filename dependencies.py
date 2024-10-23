@@ -6,7 +6,8 @@ from fastapi import Depends, HTTPException, status
 from config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
 from collections.abc import AsyncGenerator
-from models.model import User, TokenPayload
+from models.user import User
+from models.schema import TokenPayload
 from typing import Annotated
 from core.database_session import _ASYNC_SESSIONMAKER
 
